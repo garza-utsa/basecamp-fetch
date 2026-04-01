@@ -1,0 +1,14 @@
+.DS_Store
+.env
+.venv
+.venv/*
+*/.env
+*-env.plist
+*fetch.plist
+access-token.json
+account-id.json
+env-vars.plist
+token-ref/
+logs/
+*output.json
+*stderr.txt
