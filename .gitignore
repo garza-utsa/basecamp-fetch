@@ -12,3 +12,4 @@ token-ref/
 logs/
 *output.json
 *stderr.txt
+basecamp-tasks.md
