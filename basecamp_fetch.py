@@ -19,10 +19,14 @@ Optional .env keys (needed only for auto-refresh):
 import os
 import sys
 import json
+import signal
+import logging
 import argparse
 import requests
 from datetime import date
 from pathlib import Path
+
+log = logging.getLogger("basecamp")
 
 # ---------------------------------------------------------------------------
 # .env helpers
@@ -128,16 +132,21 @@ def make_headers(token: str) -> dict:
 TIMEOUT = 15  # seconds per request
 
 def paginate(url: str, headers: dict):
+    page = 1
     while url:
+        log.debug("  GET %s (page %d)", url, page)
         resp = requests.get(url, headers=headers, timeout=TIMEOUT)
         resp.raise_for_status()
-        yield from resp.json()
+        items = resp.json()
+        log.debug("  -> %d items", len(items))
+        yield from items
         link = resp.headers.get("Link", "")
         next_url = None
         for part in link.split(","):
             if 'rel="next"' in part:
                 next_url = part.split(";")[0].strip().strip("<>")
         url = next_url
+        page += 1
 
 def get_my_person_id(base_url, headers):
     resp = requests.get(f"{base_url}/my/profile.json", headers=headers, timeout=TIMEOUT)
@@ -204,7 +213,27 @@ def format_markdown(todos: list) -> str:
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--format", choices=["json", "markdown"], default="json")
+    parser.add_argument("--verbose", "-v", action="store_true",
+                        help="Enable debug logging to stderr")
+    parser.add_argument("--timeout", type=int, default=300,
+                        help="Global script timeout in seconds (default: 300, 0=none)")
+    parser.add_argument("--output", "-o", type=str, action="append",
+                        help="Write output to file(s) instead of stdout (repeatable)")
     args = parser.parse_args()
+
+    logging.basicConfig(
+        stream=sys.stderr,
+        level=logging.DEBUG if args.verbose else logging.WARNING,
+        format="%(asctime)s %(levelname)s %(message)s",
+        datefmt="%H:%M:%S",
+    )
+
+    if args.timeout and hasattr(signal, "SIGALRM"):
+        def _timeout_handler(signum, frame):
+            sys.exit(f"ERROR: Script timed out after {args.timeout}s")
+        signal.signal(signal.SIGALRM, _timeout_handler)
+        signal.alarm(args.timeout)
+        log.debug("Global timeout set to %ds", args.timeout)
 
     env          = load_env(ENV_PATH)
     access_token = env.get("BASECAMP_ACCESS_TOKEN")
@@ -216,37 +245,57 @@ def main():
     base_url = f"https://3.basecampapi.com/{account_id}"
     headers  = make_headers(access_token)
 
+    def _fetch_assignments():
+        log.debug("GET /my/assignments.json")
+        resp = requests.get(f"{base_url}/my/assignments.json",
+                            headers=headers, timeout=TIMEOUT)
+        resp.raise_for_status()
+        return resp.json()
+
     # Try once; on 401 refresh the token and retry
     try:
-        my_id = get_my_person_id(base_url, headers)
+        data = _fetch_assignments()
     except requests.HTTPError as e:
         if e.response.status_code == 401:
             access_token = refresh_access_token(env)
             headers      = make_headers(access_token)
-            my_id        = get_my_person_id(base_url, headers)
+            data         = _fetch_assignments()
         else:
             raise
 
+    # Combine priorities and non-priorities into one flat list
+    all_items = data.get("priorities", []) + data.get("non_priorities", [])
+    log.debug("Got %d assignments (%d priorities, %d non-priorities)",
+              len(all_items),
+              len(data.get("priorities", [])),
+              len(data.get("non_priorities", [])))
+
     my_todos = []
-    for project in get_projects(base_url, headers):
-        todoset = next((d for d in project.get("dock", []) if d["name"] == "todoset"), None)
-        if not todoset:
+    for item in all_items:
+        if item.get("completed"):
             continue
-        for tl in get_todolists(base_url, project["id"], todoset["id"], headers):
-            for todo in get_todos(base_url, project["id"], tl["id"], headers):
-                if my_id in [a["id"] for a in todo.get("assignees", [])]:
-                    my_todos.append({
-                        "project": project["name"],
-                        "list":    tl["title"],
-                        "task":    todo["content"],
-                        "due":     todo.get("due_on"),
-                        "url":     todo["app_url"],
-                    })
+        my_todos.append({
+            "project": item.get("bucket", {}).get("name", "Unknown"),
+            "list":    item.get("parent", {}).get("title", "Unknown"),
+            "task":    item["content"],
+            "due":     item.get("due_on"),
+            "url":     item["app_url"],
+        })
 
     if args.format == "markdown":
-        print(format_markdown(my_todos))
+        output = format_markdown(my_todos)
     else:
-        print(json.dumps(my_todos))
+        output = json.dumps(my_todos)
+
+    if args.output:
+        for path in args.output:
+            try:
+                Path(path).write_text(output)
+                log.debug("Wrote %s", path)
+            except PermissionError:
+                log.warning("Permission denied writing %s (grant Full Disk Access to Python to fix)", path)
+    else:
+        print(output)
 
 if __name__ == "__main__":
     main()

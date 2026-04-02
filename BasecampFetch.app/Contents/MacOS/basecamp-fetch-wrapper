@@ -1,0 +1,9 @@
+#!/bin/bash
+SCRIPT_DIR="/Users/garza/Development-vpaa/basecamp-skill"
+APP_DIR="$SCRIPT_DIR/BasecampFetch.app/Contents/MacOS"
+
+"$SCRIPT_DIR/.venv/bin/python3" "$SCRIPT_DIR/basecamp_fetch.py" \
+  --format markdown --verbose \
+  --output "$SCRIPT_DIR/basecamp-tasks.md"
+
+"$APP_DIR/copy-to-icloud"
