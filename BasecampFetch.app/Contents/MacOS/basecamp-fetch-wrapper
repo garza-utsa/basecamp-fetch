@@ -6,4 +6,6 @@ APP_DIR="$SCRIPT_DIR/BasecampFetch.app/Contents/MacOS"
   --format markdown --verbose \
   --output "$SCRIPT_DIR/basecamp-tasks.md"
 
-"$APP_DIR/copy-to-icloud"
+"$APP_DIR/copy-to-icloud" \
+  "$SCRIPT_DIR/basecamp-tasks.md" \
+  "~/Library/Mobile Documents/27N4MQEA55~pro~writer/Documents/asc/basecamp-tasks.md"

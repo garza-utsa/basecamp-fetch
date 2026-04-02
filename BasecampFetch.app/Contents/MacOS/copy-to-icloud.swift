@@ -1,8 +1,13 @@
 #!/usr/bin/env swift
 import Foundation
 
-let src = "/Users/garza/Development-vpaa/basecamp-skill/basecamp-tasks.md"
-let dst = NSString("~/Library/Mobile Documents/27N4MQEA55~pro~writer/Documents/asc/basecamp-tasks.md").expandingTildeInPath
+guard CommandLine.arguments.count == 3 else {
+    fputs("usage: copy-to-icloud <src> <dst>\n", stderr)
+    exit(1)
+}
+
+let src = CommandLine.arguments[1]
+let dst = NSString(CommandLine.arguments[2] as NSString).expandingTildeInPath
 
 let fm = FileManager.default
 do {
