@@ -197,10 +197,9 @@ def format_markdown(todos: list) -> str:
             current_project = project
         lines.append(f"\n### {lst}")
         for todo in items:
-            entry = f"- [ ] {todo['task']}"
+            entry = f"- [ ] [{todo['task']}]({todo['url']})"
             if todo.get("due"):
                 entry += f" — due {todo['due']}"
-            entry += f" · [view]({todo['url']})"
             lines.append(entry)
 
     return "\n".join(lines) + "\n"
