@@ -7,7 +7,7 @@ guard CommandLine.arguments.count == 3 else {
 }
 
 let src = CommandLine.arguments[1]
-let dst = NSString(CommandLine.arguments[2] as NSString).expandingTildeInPath
+let dst = CommandLine.arguments[2]
 
 let fm = FileManager.default
 do {

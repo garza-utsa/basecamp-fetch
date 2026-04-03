@@ -9,4 +9,4 @@ DATE=$(date +%Y-%m-%d)
 
 "$APP_DIR/copy-to-icloud" \
   "$SCRIPT_DIR/basecamp-tasks-$DATE.md" \
-  "~/Library/Mobile Documents/27N4MQEA55~pro~writer/Documents/asc/00 - inbox/basecamp-tasks-$DATE.md"
+  "/Users/garza/Library/Mobile Documents/27N4MQEA55~pro~writer/Documents/asc/00-inbox/basecamp-tasks-$DATE.md"
