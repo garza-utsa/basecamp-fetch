@@ -13,3 +13,7 @@ logs/
 *output.json
 *stderr.txt
 basecamp-tasks.md
+__pycache__/
+*.pyc
+daily/*
+user-reporting/*
