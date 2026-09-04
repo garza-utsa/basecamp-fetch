@@ -1,0 +1,393 @@
+<!--
+  Direct-report work overview — starting template.
+
+  Copy this file to the output path, then edit in place: replace every
+  {{PLACEHOLDER}}, delete HTML comments once handled, and delete any
+  <section> marked CONDITIONAL if this person's data doesn't support it
+  (see SKILL.md for what "supports it" means for each one).
+
+  The CSS block is a validated light/dark-mode design system — don't
+  redesign it per person. Reuse the same component patterns (stat tile,
+  vertical bar column, horizontal bar row, table row, callout, strength
+  card) so every direct report's report looks like it belongs to the same
+  set. One example of each component is left in place below — copy that
+  markup pattern and repeat it for each additional data point; don't
+  invent a new visual style for repeated data.
+-->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{PERSON_NAME}} — Work Overview</title>
+<style>
+  :root {
+    color-scheme: light;
+    --page:        #f9f9f7;
+    --surface:     #fcfcfb;
+    --surface-2:   #f3f2ee;
+    --ink:         #0b0b0b;
+    --ink-2:       #52514e;
+    --ink-muted:   #898781;
+    --hairline:    #e1e0d9;
+    --baseline:    #c3c2b7;
+    --border:      rgba(11,11,11,0.10);
+    --accent:      #2a78d6;
+    --accent-soft: #cde2fb;
+    --good:        #0ca30c;
+    --card-shadow: 0 1px 2px rgba(11,11,11,0.04), 0 1px 1px rgba(11,11,11,0.03);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --page:        #0d0d0d;
+      --surface:     #1a1a19;
+      --surface-2:   #232322;
+      --ink:         #ffffff;
+      --ink-2:       #c3c2b7;
+      --ink-muted:   #898781;
+      --hairline:    #2c2c2a;
+      --baseline:    #383835;
+      --border:      rgba(255,255,255,0.10);
+      --accent:      #3987e5;
+      --accent-soft: #1c3a5c;
+      --good:        #0ca30c;
+      --card-shadow: none;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --page:        #0d0d0d;
+    --surface:     #1a1a19;
+    --surface-2:   #232322;
+    --ink:         #ffffff;
+    --ink-2:       #c3c2b7;
+    --ink-muted:   #898781;
+    --hairline:    #2c2c2a;
+    --baseline:    #383835;
+    --border:      rgba(255,255,255,0.10);
+    --accent:      #3987e5;
+    --accent-soft: #1c3a5c;
+    --good:        #0ca30c;
+    --card-shadow: none;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--page);
+    color: var(--ink);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 920px; margin: 0 auto; padding: 40px 24px 80px; }
+
+  header.doc-head {
+    padding-bottom: 28px;
+    margin-bottom: 32px;
+    border-bottom: 1px solid var(--hairline);
+  }
+  .eyebrow {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 10px;
+  }
+  h1 { font-size: 28px; margin: 0 0 8px; letter-spacing: -0.01em; }
+  .doc-sub { color: var(--ink-2); font-size: 15px; margin: 0 0 4px; }
+  .doc-meta { color: var(--ink-muted); font-size: 13px; margin: 12px 0 0; }
+
+  h2 { font-size: 18px; margin: 0 0 4px; letter-spacing: -0.005em; }
+  .section-intro { color: var(--ink-2); font-size: 14px; margin: 0 0 18px; max-width: 62ch; }
+  section { margin: 44px 0; }
+  section:first-of-type { margin-top: 0; }
+
+  p { font-size: 14.5px; color: var(--ink); }
+  .lede { font-size: 15.5px; }
+
+  /* stat tiles */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+    margin: 28px 0 0;
+  }
+  .stat {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 16px 14px;
+    box-shadow: var(--card-shadow);
+  }
+  .stat .n { font-size: 26px; font-weight: 650; letter-spacing: -0.02em; font-variant-numeric: proportional-nums; }
+  .stat .l { font-size: 12px; color: var(--ink-muted); margin-top: 2px; }
+
+  /* bar charts — single accent hue: these are magnitude-by-category/time,
+     not multi-series identity, so one color is correct. If a chart ever
+     needs to distinguish overlapping series, stop and consult the
+     `dataviz` skill for a categorical palette instead of guessing colors. */
+  .chart-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 22px 14px;
+    box-shadow: var(--card-shadow);
+  }
+  .chart-title { font-size: 13px; font-weight: 600; color: var(--ink-2); margin: 0 0 18px; }
+
+  .bars-v {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    height: 170px;
+    border-bottom: 1px solid var(--baseline);
+  }
+  .bar-v-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    height: 100%;
+    position: relative;
+  }
+  .bar-v-val { font-size: 11px; color: var(--ink-2); font-variant-numeric: tabular-nums; margin-bottom: 4px; }
+  .bar-v { width: 60%; min-height: 4px; background: var(--accent); border-radius: 3px 3px 0 0; }
+  .bar-v.peak { background: linear-gradient(180deg, #eb6834, #d95926); }
+  .bar-v-col .bar-v-label { font-size: 10.5px; color: var(--ink-muted); margin-top: 8px; white-space: nowrap; }
+  .peak-tag {
+    position: absolute; top: -34px; left: 50%; transform: translateX(-50%);
+    font-size: 9.5px; font-weight: 600; color: #eb6834;
+    background: color-mix(in srgb, #eb6834 12%, transparent);
+    padding: 2px 6px; border-radius: 5px; white-space: nowrap;
+  }
+
+  .bars-h { display: flex; flex-direction: column; gap: 10px; }
+  .bar-h-row { display: grid; grid-template-columns: 190px 1fr 34px; align-items: center; gap: 10px; }
+  .bar-h-label { font-size: 12.5px; color: var(--ink-2); text-align: right; }
+  .bar-h-track { background: var(--surface-2); border-radius: 4px; height: 14px; overflow: hidden; }
+  .bar-h-fill { height: 100%; background: var(--accent); border-radius: 4px; min-width: 3px; }
+  .bar-h-val { font-size: 12px; color: var(--ink-muted); font-variant-numeric: tabular-nums; }
+
+  /* tables */
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--hairline); }
+  th { color: var(--ink-muted); font-weight: 600; font-size: 11.5px; text-transform: uppercase; letter-spacing: .03em; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  tr:last-child td { border-bottom: none; }
+  tr.total td { font-weight: 650; border-top: 1px solid var(--baseline); }
+  .table-wrap { overflow-x: auto; }
+
+  /* lists */
+  ul.clean { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+  ul.clean li { font-size: 14px; padding-left: 18px; position: relative; }
+  ul.clean li::before {
+    content: ""; position: absolute; left: 0; top: 7px;
+    width: 6px; height: 6px; border-radius: 50%; background: var(--accent);
+  }
+  ul.clean b { font-weight: 600; }
+  .muted { color: var(--ink-2); font-size: 13px; }
+
+  .callout {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid #eb6834;
+    border-radius: 8px;
+    padding: 16px 18px;
+    margin: 18px 0 0;
+  }
+  .callout h3 { margin: 0 0 6px; font-size: 14.5px; }
+  .callout p { margin: 0 0 8px; font-size: 13.5px; color: var(--ink-2); }
+  .callout p:last-child { margin-bottom: 0; }
+
+  .strengths { display: flex; flex-direction: column; gap: 14px; }
+  .strength {
+    display: grid; grid-template-columns: 26px 1fr; gap: 12px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    padding: 14px 16px; box-shadow: var(--card-shadow);
+  }
+  .strength .num {
+    font-size: 13px; font-weight: 700; color: var(--accent); background: var(--accent-soft);
+    width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  }
+  .strength h3 { margin: 0 0 4px; font-size: 14px; }
+  .strength p { margin: 0; font-size: 13.5px; color: var(--ink-2); }
+
+  .pill-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+  .pill {
+    font-size: 11.5px; color: var(--ink-2); background: var(--surface-2);
+    border: 1px solid var(--border); padding: 3px 9px; border-radius: 999px;
+  }
+
+  footer { margin-top: 56px; padding-top: 20px; border-top: 1px solid var(--hairline); font-size: 12px; color: var(--ink-muted); }
+
+  @media (max-width: 560px) {
+    .bar-h-row { grid-template-columns: 110px 1fr 28px; }
+    .bar-h-label { font-size: 11.5px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="doc-head">
+    <p class="eyebrow">Performance evaluation reference</p>
+    <h1>{{PERSON_NAME}} — Work Overview</h1>
+    <p class="doc-sub">{{DATE_RANGE_HUMAN}} · compiled from completed Basecamp checklist items</p>
+    <!-- doc-meta: state today's date and how many source periods were read, so
+         the reader (and future-you) can tell at a glance how current this is.
+         Write this as real grammatical English for the actual count — e.g. "1
+         reporting period" or "3 reporting periods" — don't leave a mechanical
+         "report(s)"-style placeholder in the output. -->
+    <p class="doc-meta">Prepared {{TODAY}} from {{N}} reporting period(s) · source: <em>user-reporting/{{slug}}/</em></p>
+  </header>
+
+  <!-- ================= ALWAYS INCLUDE ================= -->
+  <section id="summary">
+    <h2>Executive summary</h2>
+    <!-- 3-5 sentences, written from the numbers below, not generic praise.
+         Name specific project areas, specific standout initiatives, and any
+         genuine anomaly (a burst, a gap). If the data is thin (e.g. one
+         quarter, few items), say so plainly rather than padding. -->
+    <p class="lede">{{EXEC_SUMMARY}}</p>
+    <div class="stats">
+      <!-- Fixed set of exactly 5 tiles, always in this order, so every
+           direct report's report is comparable at a glance. See SKILL.md
+           "Computing the five stat tiles" for how each number is derived —
+           the on-time % in particular has a denominator subtlety worth
+           getting right. -->
+      <div class="stat"><div class="n">{{TOTAL_ITEMS}}</div><div class="l">Completed items</div></div>
+      <div class="stat"><div class="n">{{AREA_COUNT}}</div><div class="l">Project areas touched</div></div>
+      <div class="stat"><div class="n">{{TICKET_COUNT}}</div><div class="l">Distinct tickets / initiatives</div></div>
+      <div class="stat"><div class="n">{{AVG_PER_MONTH}}</div><div class="l">Avg. completions / month</div></div>
+      <div class="stat"><div class="n">{{ONTIME_PCT}}%</div><div class="l">Completed on/before due date</div></div>
+    </div>
+  </section>
+
+  <!-- ================= ALWAYS INCLUDE if >= 2 months of data ================= -->
+  <section id="monthly">
+    <h2>Pace over the period</h2>
+    <p class="section-intro">{{one line explaining what to look for, e.g. a spike or a gap}}</p>
+    <div class="chart-card">
+      <p class="chart-title">Completed checklist items by month</p>
+      <div class="bars-v">
+        <!-- repeat one .bar-v-col per month. height% = value/max*100 (min ~6%
+             so a "1" is still visible). Use .bar-v.peak + .peak-tag ONLY on a
+             month covered by a Spotlight section below, where you can name
+             the cause. A month that's simply numerically the highest — with
+             no due-date-gap evidence explaining why — stays a plain bar; note
+             the variation in the section-intro prose instead of styling it as
+             a peak. Don't let the chart imply a causal claim the text doesn't
+             make. -->
+        <div class="bar-v-col"><div class="bar-v-val">{{n}}</div><div class="bar-v" style="height:{{pct}}%"></div><div class="bar-v-label">{{Mon YY}}</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= ALWAYS INCLUDE ================= -->
+  <section id="categories">
+    <h2>Work by project area</h2>
+    <p class="section-intro">Every completed ticket sits inside a Basecamp project bucket for a specific team or initiative.</p>
+    <div class="chart-card">
+      <p class="chart-title">Completions by project area</p>
+      <div class="bars-h">
+        <!-- sorted descending by total; width% = value/max*100 -->
+        <div class="bar-h-row"><div class="bar-h-label">{{Area}}</div><div class="bar-h-track"><div class="bar-h-fill" style="width:{{pct}}%"></div></div><div class="bar-h-val">{{n}}</div></div>
+      </div>
+    </div>
+    <!-- If there's more than one source period/file, add the per-period
+         breakdown table (Area x period columns + a Total row/column) like
+         the categories chart above it. Skip the table for a single-period
+         report — the chart alone already tells the whole story. -->
+  </section>
+
+  <!-- ================= CONDITIONAL: only if the data shows a genuine,
+       explainable burst or anomaly (a cluster of completions concentrated
+       in a short window, especially ones whose due dates are far earlier
+       than their completion dates — often a sign of recovered/rebuilt work
+       after an outage, rollback, or backlog clear). Never invent this
+       section to add drama; an ordinary steady pace doesn't need one. ================= -->
+  <section id="spotlight">
+    <h2>Spotlight: {{short description}}</h2>
+    <p class="section-intro">{{why this cluster is worth calling out on its own}}</p>
+    <div class="callout">
+      <h3>{{headline stat, e.g. "21 completions in 8 days"}}</h3>
+      <p>{{what happened, grounded in specific tickets/dates}}</p>
+      <p><span class="muted">{{any caveat about inference vs confirmed fact — flag it as inferred if you're reading intent into ticket timing rather than being told the cause directly}}</span></p>
+    </div>
+  </section>
+
+  <!-- ================= CONDITIONAL: include if there are notable new
+       page/site builds or launches (not just edits) ================= -->
+  <section id="projects">
+    <h2>Notable page builds &amp; launches</h2>
+    <ul class="clean">
+      <li><b>{{Page/site name}}</b> — {{one line: what was built, when}}</li>
+    </ul>
+  </section>
+
+  <!-- ================= CONDITIONAL: include if there are explicit
+       accessibility/WCAG/compliance tickets ================= -->
+  <section id="accessibility">
+    <h2>Accessibility &amp; compliance work</h2>
+    <p class="section-intro">{{count}} tickets were explicit accessibility audits or remediation.</p>
+    <ul class="clean">
+      <li>{{ticket}} — {{site/page}} ({{month year}})</li>
+    </ul>
+  </section>
+
+  <!-- ================= CONDITIONAL: include if there's a distinct,
+       multi-ticket cleanup/audit/governance effort that isn't just routine
+       ticket work ================= -->
+  <section id="governance">
+    <h2>{{name the initiative, e.g. "Content governance: File Reconciliation initiative"}}</h2>
+    <ul class="clean">
+      <li>{{item}}</li>
+    </ul>
+  </section>
+
+  <!-- ================= CONDITIONAL: include only if there's an actual,
+       explicit training/mentoring/documentation-handoff ticket — don't
+       infer this from ordinary collaborative work ================= -->
+  <section id="mentoring">
+    <h2>Training &amp; knowledge sharing</h2>
+    <ul class="clean">
+      <li>{{what was taught/documented, to whom, when}} — {{one clause on why this matters for the evaluation}}</li>
+    </ul>
+  </section>
+
+  <!-- ================= ALWAYS INCLUDE ================= -->
+  <section id="observations">
+    <h2>Observations for the evaluation</h2>
+    <p class="section-intro">Data-backed talking points, each tied to specific evidence above.</p>
+    <div class="strengths">
+      <!-- 3-6 of these. Each one must trace to a specific section/number
+           above — no generic "great team player" filler with nothing behind
+           it. If the data only really supports 2 solid points, write 2. -->
+      <div class="strength">
+        <div class="num">1</div>
+        <div><h3>{{strength}}</h3><p>{{evidence-grounded justification}}</p></div>
+      </div>
+    </div>
+    <div class="pill-row">
+      <span class="pill">{{theme}}</span>
+    </div>
+  </section>
+
+  <!-- ================= ALWAYS INCLUDE ================= -->
+  <footer>
+    <p><b>Scope &amp; caveats:</b> This overview reflects only Basecamp checklist
+    items marked complete within the reporting window(s) listed above ({{list
+    the exact ranges}}). It does not capture in-progress or incomplete work,
+    meetings, verbal or ad hoc requests handled outside Basecamp, code/design
+    quality, or collaboration and communication — all of which matter for a
+    full performance evaluation and aren't visible in ticket data alone.
+    {{Add a sentence here for any inferred narrative (e.g. an incident cause)
+    flagging it as inferred, not confirmed.}}</p>
+    <p style="margin-top:8px;">Source: {{list each source .md file by name}} · Generated {{TODAY}}.</p>
+  </footer>
+
+</div>
+</body>
+</html>
